@@ -12,8 +12,9 @@ module.exports = function(grunt) {
 
   var i18n = require("i18n");
   var fs = require('fs');
+  var path = require('path');
   var Gettext = require("node-gettext");
-    
+
   var _ = grunt.util._;
   
 
@@ -86,9 +87,13 @@ module.exports = function(grunt) {
         
         // Iterate over all specified file groups.
         files.forEach(function(f) {
+          console.log("file", f);
           // Template's execution
           var src = f.src.filter(function(filepath) {
             // Warn on and remove invalid source files (if nonull was set).
+            console.log('cwd', f.cwd);
+            filepath = path.join(f.cwd, filepath);
+            console.log('ffff', filepath);
             if (!grunt.file.exists(filepath)) {
               grunt.log.warn('Source file "' + filepath + '" not found.');
               return false;
@@ -97,6 +102,7 @@ module.exports = function(grunt) {
             }
           }).map(function(filepath) {
             // Read source template.
+            filepath = path.join(f.cwd, filepath);
             var compiled = _.template(grunt.file.read(filepath));
             var data = options.data;
             if(gt){
@@ -122,12 +128,14 @@ module.exports = function(grunt) {
           if(folder){
               for(var i = 0; i < src.length; i++){
                   var srcFile = f.src[i];
-                  var filename = f.dest + '/'; 
+                  var filename = path.resolve(f.dest);
+                  var out;
                   if(options.i18n && lng.length > 0){
-                      filename += getOutputName(srcFile.replace(/^.*[\\\/]/, ''), lng, options.extension);
+                      out = getOutputName(srcFile, lng, options.extension);
                   } else {
-                      filename += getOutputName(srcFile.replace(/^.*[\\\/]/, ''), '', options.extension);
+                      out = getOutputName(srcFile, '', options.extension);
                   }
+                  filename = path.join(filename, out);
                   // Write the destination files.
                   grunt.file.write(filename, src[i]);
                   grunt.log.writeln('File "' + filename + '" created.');
@@ -147,6 +155,7 @@ module.exports = function(grunt) {
 
   var getOutputName = function(n, lng, extension) {
       var name = n;
+      console.log("her", name);
       var idx = n.lastIndexOf('.');
       if(idx > -1){
         if(extension || typeof extension === "string"){
@@ -161,6 +170,7 @@ module.exports = function(grunt) {
           name = n + '_' + lng;
         }
       }
+      console.log("name", name);
       return name;
   };
 };
